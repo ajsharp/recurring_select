@@ -19,8 +19,7 @@ module RecurringSelect
         params = JSON.parse(params)
       end
 
-      params.symbolize_keys!
-      rules_hash = filter_params(params)
+      rules_hash = filter_params(ActiveSupport::HashWithIndifferentAccess.new(params))
 
       IceCube::Rule.from_hash(rules_hash)
     end
@@ -54,7 +53,6 @@ module RecurringSelect
     params[:week_start] = params[:week_start].to_i if params[:week_start]
 
     params[:validations] ||= {}
-    params[:validations].symbolize_keys!
 
     if params[:validations][:day]
       params[:validations][:day] = params[:validations][:day].collect(&:to_i)
@@ -62,6 +60,11 @@ module RecurringSelect
 
     if params[:validations][:day_of_month]
       params[:validations][:day_of_month] = params[:validations][:day_of_month].collect(&:to_i)
+    end
+
+    # ice_cube expects time values to be Time instances, not strings
+    if params[:until] && params[:until][:time] && !params[:until][:time].blank?
+      params[:until][:time] = Time.parse(params[:until][:time])
     end
 
     # this is soooooo ugly
